@@ -24,9 +24,6 @@
 #  IN THE SOFTWARE.
 # 
 
-{.compile: "vendor/picohttpparser/picohttpparser.c".}
-{.emit: """#include "vendor/picohttpparser/picohttpparser.h"""".}
-
 import strtabs
 import httpcore
 
@@ -41,7 +38,7 @@ import httpcore
 type
   ssize_t* {.importc, header: "<sys/types.h>".} = BiggestInt
   
-  phr_header* {.importc: "struct phr_header", header: "vendor/picohttpparser/picohttpparser.h".} = object 
+  phr_header* {.importc: "struct phr_header", header: "picohttpparser.h".} = object 
     name: cstring
     name_len: csize
     value: cstring
@@ -55,17 +52,17 @@ proc phr_parse_request*(buf: cstring; len: csize; `method`: ptr cstring;
                         method_len: ptr csize; path: ptr cstring; 
                         path_len: ptr csize; minor_version: ptr cint; 
                         headers: ptr phr_header; num_headers: ptr csize; 
-                        last_len: csize): cint {.importc, header: "vendor/picohttpparser/picohttpparser.h".}
+                        last_len: csize): cint {.importc, header: "picohttpparser.h".}
 # ditto 
 
 proc phr_parse_response*(buf: cstring; len: csize; minor_version: ptr cint; 
                          status: ptr cint; msg: cstringArray; 
                          msg_len: ptr csize; headers: ptr phr_header; 
-                         num_headers: ptr csize; last_len: csize): cint {.importc, header: "vendor/picohttpparser/picohttpparser.h".}
+                         num_headers: ptr csize; last_len: csize): cint {.importc, header: "picohttpparser.h".}
 # ditto 
 
 proc phr_parse_headers*(buf: cstring; len: csize; headers: ptr phr_header; 
-                        num_headers: ptr csize; last_len: csize): cint {.importc, header: "vendor/picohttpparser/picohttpparser.h".}
+                        num_headers: ptr csize; last_len: csize): cint {.importc, header: "picohttpparser.h".}
 # should be zero-filled before start 
 
 type 
@@ -87,7 +84,7 @@ type
 # 
 
 proc phr_decode_chunked*(decoder: ptr phr_chunked_decoder; buf: cstring; 
-                         bufsz: ptr csize): ssize_t {.importc, header: "vendor/picohttpparser/picohttpparser.h".}
+                         bufsz: ptr csize): ssize_t {.importc, header: "picohttpparser.h".}
 
 proc tryParseRequest*(request: string, httpMethod: var string, path: var string, minor_version: var cint,
                    headers: var seq[phr_header]): cint =
