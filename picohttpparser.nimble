@@ -1,6 +1,12 @@
-[Package]
+# Package
 
-version       = "0.10.0"
+version       = "0.11.0"
 author        = "Philip Wernersbach"
-description   = "Bindings for picohttpparser."
+description   = "Bindings for picohttpparser"
 license       = "MIT"
+srcDir        = "src"
+
+
+# Dependencies
+
+requires "nim >= 1.6.12"
