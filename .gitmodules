@@ -2,5 +2,5 @@
 	path = vendor/picohttpparser
 	url = https://github.com/h2o/picohttpparser.git
 [submodule "picohttpparser"]
-	path = src/picohttpparser/picohttpparser
+	path = picohttpparser-c
 	url = https://github.com/h2o/picohttpparser

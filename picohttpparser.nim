@@ -1,7 +1,7 @@
-import std/unittest
-import ../src/picohttpparser/api
+import picohttpparser/api
+export api
 
-suite "Simple request path is captured":
+when isMainModule:
     var httpMethod: string
     var path: string
     var minorVersion: cint
@@ -9,4 +9,4 @@ suite "Simple request path is captured":
 
     parseRequest("GET /test HTTP/1.1\r\n\r\n", httpMethod, path, minorVersion, headers)
 
-    require(path == "/test")
+    assert(path == "/test")

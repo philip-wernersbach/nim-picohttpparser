@@ -24,7 +24,7 @@
 #  IN THE SOFTWARE.
 # 
 
-import std/[strtabs, httpcore, strutils, os]
+import std/[strtabs, httpcore]
 
 #when defined(_MSC_VER): 
 #  const 
@@ -34,7 +34,7 @@ import std/[strtabs, httpcore, strutils, os]
 # contains name and value of a header (name == NULL if is a continuing line
 #  of a multiline header 
 
-const picoRoot = currentSourcePath().rsplit(DirSep, 1)[0].parentDir.parentDir & "/picohttpparser"
+const picoRoot = "picohttpparser-c"
 
 {.compile: picoRoot & "/picohttpparser.c".}
 
