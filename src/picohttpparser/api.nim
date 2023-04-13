@@ -24,8 +24,7 @@
 #  IN THE SOFTWARE.
 # 
 
-import strtabs
-import httpcore
+import std/[strtabs, httpcore, strutils, os]
 
 #when defined(_MSC_VER): 
 #  const 
@@ -35,7 +34,9 @@ import httpcore
 # contains name and value of a header (name == NULL if is a continuing line
 #  of a multiline header 
 
-{.compile: "../picohttpparser/picohttpparser.c".}
+const picoRoot = currentSourcePath().rsplit(DirSep, 1)[0].parentDir.parentDir & "/picohttpparser"
+
+{.compile: picoRoot & "/picohttpparser.c".}
 
 type
   PicoHttpParserError* = object of CatchableError
@@ -43,7 +44,7 @@ type
 
   ssize_t* {.importc, header: "<sys/types.h>".} = BiggestInt
   
-  phr_header* {.importc: "struct phr_header", header: "../picohttpparser/picohttpparser.h".} = object 
+  phr_header* {.importc: "struct phr_header", header: picoRoot & "/picohttpparser.h".} = object 
     name: cstring
     name_len: csize_t
     value: cstring
@@ -54,18 +55,18 @@ proc phr_parse_request*(buf: cstring; len: csize_t; `method`: ptr cstring;
                         method_len: ptr csize_t; path: ptr cstring; 
                         path_len: ptr csize_t; minor_version: ptr cint; 
                         headers: ptr phr_header; num_headers: ptr csize_t; 
-                        last_len: csize_t): cint {.importc, header: "../picohttpparser/picohttpparser.h".}
+                        last_len: csize_t): cint {.importc, header: picoRoot & "/picohttpparser.h".}
                         ## returns number of bytes consumed if successful, -2 if request is partial, -1 if failed
 # ditto 
 
 proc phr_parse_response*(buf: cstring; len: csize_t; minor_version: ptr cint; 
                          status: ptr cint; msg: cstringArray; 
                          msg_len: ptr csize_t; headers: ptr phr_header; 
-                         num_headers: ptr csize_t; last_len: csize_t): cint {.importc, header: "../picohttpparser/picohttpparser.h".}
+                         num_headers: ptr csize_t; last_len: csize_t): cint {.importc, header: picoRoot & "/picohttpparser.h".}
 # ditto 
 
 proc phr_parse_headers*(buf: cstring; len: csize_t; headers: ptr phr_header; 
-                        num_headers: ptr csize_t; last_len: csize_t): cint {.importc, header: "../picohttpparser/picohttpparser.h".}
+                        num_headers: ptr csize_t; last_len: csize_t): cint {.importc, header: picoRoot & "/picohttpparser.h".}
 # should be zero-filled before start 
 
 type 
@@ -87,7 +88,7 @@ type
 # 
 
 proc phr_decode_chunked*(decoder: ptr phr_chunked_decoder; buf: cstring; 
-                         bufsz: ptr csize_t): ssize_t {.importc, header: "../picohttpparser/picohttpparser.h".}
+                         bufsz: ptr csize_t): ssize_t {.importc, header: picoRoot & "/picohttpparser.h".}
 
 proc tryParseRequest*(request: string, httpMethod: var string, path: var string, minor_version: var cint,
                    headers: var seq[phr_header]): cint =
