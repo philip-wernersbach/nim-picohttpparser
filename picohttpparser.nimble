@@ -6,6 +6,7 @@ description   = "Bindings for picohttpparser"
 license       = "MIT"
 srcDir        = "src"
 
+installDirs = @["picohttpparser"]
 
 # Dependencies
 
