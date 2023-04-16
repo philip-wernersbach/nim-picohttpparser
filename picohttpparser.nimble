@@ -5,7 +5,7 @@ author        = "Philip Wernersbach"
 description   = "Bindings for picohttpparser"
 license       = "MIT"
 
-installDirs = @["picohttpparser-c"]
+installDirs = @["vendor"]
 
 # Dependencies
 
