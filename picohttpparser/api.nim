@@ -34,9 +34,9 @@ import std/[strtabs, httpcore, strutils, os]
 # contains name and value of a header (name == NULL if is a continuing line
 #  of a multiline header 
 
-const picoRoot = currentSourcePath().rsplit(DirSep, 1)[0].parentDir & "/picohttpparser-c"
+const picoRoot = currentSourcePath().rsplit(DirSep, 1)[0].parentDir & "/vendor/picohttpparser"
 
-{.passC: "-I" & currentSourcePath().rsplit(DirSep, 1)[0] & "/picohttpparser-c/include".}
+{.passC: "-I" & currentSourcePath().rsplit(DirSep, 1)[0] & "/vendor/picohttpparser/include".}
 {.compile: picoRoot & "/picohttpparser.c".}
 
 type
