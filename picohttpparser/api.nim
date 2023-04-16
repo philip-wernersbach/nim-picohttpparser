@@ -24,8 +24,7 @@
 #  IN THE SOFTWARE.
 # 
 
-import strtabs
-import httpcore
+import std/[strtabs, httpcore, strutils, os]
 
 #when defined(_MSC_VER): 
 #  const 
@@ -35,39 +34,45 @@ import httpcore
 # contains name and value of a header (name == NULL if is a continuing line
 #  of a multiline header 
 
+const picoRoot = currentSourcePath().rsplit(DirSep, 1)[0].parentDir & "/vendor/picohttpparser"
+
+{.passC: "-I" & currentSourcePath().rsplit(DirSep, 1)[0] & "/vendor/picohttpparser/include".}
+{.compile: picoRoot & "/picohttpparser.c".}
+
 type
+  PicoHttpParserError* = object of CatchableError
+    ## Error raised when a picohttpparser error occurs
+
   ssize_t* {.importc, header: "<sys/types.h>".} = BiggestInt
   
-  phr_header* {.importc: "struct phr_header", header: "picohttpparser.h".} = object 
+  phr_header* {.importc: "struct phr_header", header: picoRoot & "/picohttpparser.h".} = object 
     name: cstring
-    name_len: csize
+    name_len: csize_t
     value: cstring
-    value_len: csize
+    value_len: csize_t
 
 
-# returns number of bytes consumed if successful, -2 if request is partial,
-#  -1 if failed 
-
-proc phr_parse_request*(buf: cstring; len: csize; `method`: ptr cstring; 
-                        method_len: ptr csize; path: ptr cstring; 
-                        path_len: ptr csize; minor_version: ptr cint; 
-                        headers: ptr phr_header; num_headers: ptr csize; 
-                        last_len: csize): cint {.importc, header: "picohttpparser.h".}
+proc phr_parse_request*(buf: cstring; len: csize_t; `method`: ptr cstring; 
+                        method_len: ptr csize_t; path: ptr cstring; 
+                        path_len: ptr csize_t; minor_version: ptr cint; 
+                        headers: ptr phr_header; num_headers: ptr csize_t; 
+                        last_len: csize_t): cint {.importc, header: picoRoot & "/picohttpparser.h".}
+                        ## returns number of bytes consumed if successful, -2 if request is partial, -1 if failed
 # ditto 
 
-proc phr_parse_response*(buf: cstring; len: csize; minor_version: ptr cint; 
+proc phr_parse_response*(buf: cstring; len: csize_t; minor_version: ptr cint; 
                          status: ptr cint; msg: cstringArray; 
-                         msg_len: ptr csize; headers: ptr phr_header; 
-                         num_headers: ptr csize; last_len: csize): cint {.importc, header: "picohttpparser.h".}
+                         msg_len: ptr csize_t; headers: ptr phr_header; 
+                         num_headers: ptr csize_t; last_len: csize_t): cint {.importc, header: picoRoot & "/picohttpparser.h".}
 # ditto 
 
-proc phr_parse_headers*(buf: cstring; len: csize; headers: ptr phr_header; 
-                        num_headers: ptr csize; last_len: csize): cint {.importc, header: "picohttpparser.h".}
+proc phr_parse_headers*(buf: cstring; len: csize_t; headers: ptr phr_header; 
+                        num_headers: ptr csize_t; last_len: csize_t): cint {.importc, header: picoRoot & "/picohttpparser.h".}
 # should be zero-filled before start 
 
 type 
   phr_chunked_decoder* = tuple 
-    bytes_left_in_chunk: csize # number of bytes left in current chunk 
+    bytes_left_in_chunk: csize_t # number of bytes left in current chunk 
     consume_trailer: char    # if trailing headers should be consumed 
     hex_count: char
     state: char
@@ -84,22 +89,21 @@ type
 # 
 
 proc phr_decode_chunked*(decoder: ptr phr_chunked_decoder; buf: cstring; 
-                         bufsz: ptr csize): ssize_t {.importc, header: "picohttpparser.h".}
+                         bufsz: ptr csize_t): ssize_t {.importc, header: picoRoot & "/picohttpparser.h".}
 
 proc tryParseRequest*(request: string, httpMethod: var string, path: var string, minor_version: var cint,
                    headers: var seq[phr_header]): cint =
 
     var methodPointer: cstring
-    var methodLen: csize
+    var methodLen: csize_t
     var pathPointer: cstring
-    var pathLen: csize
+    var pathLen: csize_t
     var minorVersion: cint
-    var previousHeaderBufferLen: csize
-    var numberOfHeaders = csize(headers.len)
+    var previousHeaderBufferLen: csize_t
+    var numberOfHeaders = csize_t(headers.len)
 
     let requestLen = request.len
     let requestCstring = cstring(request)
-    let requestLenCsize = csize(requestLen)
     let methodPointerAddr = addr(methodPointer)
     let methodLenAddr = addr(methodLen)
     let pathPointerAddr = addr(pathPointer)
@@ -113,7 +117,7 @@ proc tryParseRequest*(request: string, httpMethod: var string, path: var string,
 
     let numberOfHeadersAddr = addr(numberOfHeaders)
 
-    #var result = phr_parse_request(cstring(request), csize(requestLen), addr(methodPointer), addr(methodLen), addr(pathPointer), addr(pathLen),
+    #var result = phr_parse_request(cstring(request), csize_t(requestLen), addr(methodPointer), addr(methodLen), addr(pathPointer), addr(pathLen),
     #                      addr(minorVersion), addr(headers[0]), addr(numberOfHeaders), previousHeaderBufferLen)
     {.emit: "`result` = phr_parse_request(`requestCstring`, `requestLen`, (const char **)`methodPointerAddr`, `methodLenAddr`, (const char **)`pathPointerAddr`, `pathLenAddr`, `minorVersionAddr`, `headersAddr`, `numberOfHeadersAddr`, `previousHeaderBufferLen`);" .}
 
@@ -138,13 +142,13 @@ proc parseRequest*(request: string, httpMethod: var string, path: var string, mi
     if (result >= 0):
         return
     elif (result == -1):
-        raise newException(Exception, "picohttpparser: Parse error!")
+        raise newException(PicoHttpParserError, "picohttpparser: Parse error!")
     elif (result == -2):
-        raise newException(Exception, "picohttpparser: Incomplete request!")
+        raise newException(PicoHttpParserError, "picohttpparser: Incomplete request!")
     elif (result == -255):
-        raise newException(Exception, "picohttpparser: Request only partially consumed!")
+        raise newException(PicoHttpParserError, "picohttpparser: Request only partially consumed!")
     else:
-        raise newException(Exception, "picohttpparser: Unknown error! (Error code: " & $result & ")")
+        raise newException(PicoHttpParserError, "picohttpparser: Unknown error! (Error code: " & $result & ")")
 
 converter toStringTableRef*(x: seq[phr_header]): StringTableRef =
     result = newStringTable(modeCaseSensitive)
